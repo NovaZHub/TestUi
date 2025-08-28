@@ -1,71 +1,59 @@
--- NovaZ UI Library
-local TweenService = game:GetService("TweenService")
+-- NovaZLib UI Test
 
 local NovaZLib = {}
 
 function NovaZLib:CreateWindow(title, subtitle)
     local ScreenGui = Instance.new("ScreenGui")
-    ScreenGui.Parent = game:GetService("CoreGui")
-    ScreenGui.Name = "NovaZUI"
+    ScreenGui.Parent = game.CoreGui
+    ScreenGui.Name = "NovaZLibUI"
 
+    -- Main Frame
     local MainFrame = Instance.new("Frame")
     MainFrame.Parent = ScreenGui
     MainFrame.Size = UDim2.new(0, 400, 0, 300)
     MainFrame.Position = UDim2.new(0.5, -200, 0.5, -150)
     MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    MainFrame.Active = true
+    MainFrame.Draggable = true -- ✅ agora dá pra arrastar a janela
 
     local UICorner = Instance.new("UICorner")
     UICorner.CornerRadius = UDim.new(0, 12)
     UICorner.Parent = MainFrame
 
-    local TitleBar = Instance.new("Frame")
-    TitleBar.Parent = MainFrame
-    TitleBar.Size = UDim2.new(1, 0, 0, 40)
-    TitleBar.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-
+    -- Title
     local TitleLabel = Instance.new("TextLabel")
-    TitleLabel.Parent = TitleBar
-    TitleLabel.Size = UDim2.new(1, -50, 1, 0)
-    TitleLabel.Position = UDim2.new(0, 10, 0, 0)
+    TitleLabel.Parent = MainFrame
+    TitleLabel.Size = UDim2.new(1, 0, 0, 40)
     TitleLabel.BackgroundTransparency = 1
-    TitleLabel.Text = title .. " - " .. subtitle
+    TitleLabel.Text = title .. " | " .. subtitle
     TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    TitleLabel.TextScaled = true
     TitleLabel.Font = Enum.Font.GothamBold
-    TitleLabel.TextSize = 16
-    TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
 
-    local Window = {}
-    Window.MainFrame = MainFrame
-    Window.TitleBar = TitleBar
+    -- Minimize Button
+    local MinimizeButton = Instance.new("ImageButton")
+    MinimizeButton.Parent = MainFrame
+    MinimizeButton.Size = UDim2.new(0, 35, 0, 35)
+    MinimizeButton.Position = UDim2.new(1, -45, 0, 5)
+    MinimizeButton.BackgroundTransparency = 0
+    MinimizeButton.Image = "rbxassetid://71014873973869" -- ícone
+    MinimizeButton.AutoButtonColor = true
 
-    -- Função de minimizar
-    function Window:AddMinimizeButton(config)
-        local btn = Instance.new("ImageButton")
-        btn.Name = "MinimizeButton"
-        btn.Parent = TitleBar
-        btn.Size = UDim2.new(0, 30, 0, 30)
-        btn.Position = UDim2.new(1, -35, 0.5, -15)
-        btn.BackgroundTransparency = config.Button.BackgroundTransparency or 1
-        btn.Image = config.Button.Image or "rbxassetid://7072724538"
+    local Corner = Instance.new("UICorner")
+    Corner.CornerRadius = UDim.new(1, 0)
+    Corner.Parent = MinimizeButton
 
-        local corner = Instance.new("UICorner")
-        corner.CornerRadius = config.Corner.CornerRadius or UDim.new(0, 8)
-        corner.Parent = btn
+    local minimized = false
+    MinimizeButton.MouseButton1Click:Connect(function()
+        minimized = not minimized
+        if minimized then
+            MainFrame:TweenSize(UDim2.new(0, 400, 0, 40), "Out", "Quad", 0.3, true)
+        else
+            MainFrame:TweenSize(UDim2.new(0, 400, 0, 300), "Out", "Quad", 0.3, true)
+        end
+    end)
 
-        local minimized = false
-        btn.MouseButton1Click:Connect(function()
-            minimized = not minimized
-            local goal = {}
-            if minimized then
-                goal.Size = UDim2.new(0, MainFrame.Size.X.Offset, 0, 40)
-            else
-                goal.Size = UDim2.new(0, MainFrame.Size.X.Offset, 0, 300)
-            end
-            TweenService:Create(MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), goal):Play()
-        end)
-    end
-
-    return Window
+    return MainFrame
 end
 
 return NovaZLib
