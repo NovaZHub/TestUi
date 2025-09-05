@@ -1,111 +1,52 @@
--- SuperLibraryMin.lua
--- Library completa com Minimizar
+-- NovaZLib
+local NovaZLib = {}
+NovaZLib.Tabs = {}
 
-local SuperLib = {}
-
--- Serviços
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local LocalPlayer = Players.LocalPlayer
-local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
-
--- Armazena todas as janelas
-SuperLib.Windows = {}
-
--- Criar janela
-function SuperLib:CreateWindow(title)
-    local window = Instance.new("ScreenGui")
-    window.Name = title
-    window.ResetOnSpawn = false
-    window.Parent = PlayerGui
-
-    local mainFrame = Instance.new("Frame")
-    mainFrame.Size = UDim2.new(0, 500, 0, 400)
-    mainFrame.Position = UDim2.new(0.5, -250, 0.5, -200)
-    mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    mainFrame.BorderSizePixel = 0
-    mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-    mainFrame.Parent = window
-
-    -- Título
-    local titleLabel = Instance.new("TextLabel")
-    titleLabel.Size = UDim2.new(1, 0, 0, 50)
-    titleLabel.Position = UDim2.new(0, 0, 0, 0)
-    titleLabel.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-    titleLabel.Text = title
-    titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    titleLabel.Font = Enum.Font.GothamBold
-    titleLabel.TextSize = 24
-    titleLabel.Parent = mainFrame
-
-    -- Botão Minimizar
-    local minimizeButton = Instance.new("TextButton")
-    minimizeButton.Size = UDim2.new(0, 30, 0, 30)
-    minimizeButton.Position = UDim2.new(1, -35, 0, 10)
-    minimizeButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-    minimizeButton.Text = "_"
-    minimizeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    minimizeButton.Font = Enum.Font.GothamBold
-    minimizeButton.TextSize = 24
-    minimizeButton.Parent = mainFrame
-
-    local minimized = false
-    local originalSize = mainFrame.Size
-    local originalPos = mainFrame.Position
-
-    minimizeButton.MouseButton1Click:Connect(function()
-        if not minimized then
-            mainFrame:TweenSize(UDim2.new(0, 200, 0, 50), "Out", "Quad", 0.3, true)
-            mainFrame:TweenPosition(UDim2.new(0.5, -100, 0.5, -25), "Out", "Quad", 0.3, true)
-            minimized = true
-        else
-            mainFrame:TweenSize(originalSize, "Out", "Quad", 0.3, true)
-            mainFrame:TweenPosition(originalPos, "Out", "Quad", 0.3, true)
-            minimized = false
-        end
-    end)
-
-    -- Container de abas
-    local tabContainer = Instance.new("Frame")
-    tabContainer.Size = UDim2.new(1, 0, 1, -50)
-    tabContainer.Position = UDim2.new(0, 0, 0, 50)
-    tabContainer.BackgroundTransparency = 1
-    tabContainer.Parent = mainFrame
-
-    local windowData = {
-        Gui = window,
-        Frame = mainFrame,
-        Tabs = {},
-        TabContainer = tabContainer
+-- Criar janela principal
+function NovaZLib:CreateWindow(config)
+    local Window = {
+        Name = config.Name or "NovaZLib",
+        Tabs = {}
     }
-
-    table.insert(SuperLib.Windows, windowData)
-    return windowData
+    print("Janela criada:", Window.Name)
+    self.Window = Window
+    return Window
 end
 
 -- Criar aba
-function SuperLib:CreateTab(window, name)
-    local tabFrame = Instance.new("Frame")
-    tabFrame.Size = UDim2.new(1, 0, 1, 0)
-    tabFrame.Position = UDim2.new(0, 0, 0, 0)
-    tabFrame.BackgroundTransparency = 1
-    tabFrame.Visible = true
-    tabFrame.Parent = window.TabContainer
-
-    local tabData = {
+function NovaZLib:CreateTab(window, name)
+    local Tab = {
         Name = name,
-        Frame = tabFrame,
-        Buttons = {},
-        Toggles = {},
-        Sliders = {}
+        Elements = {}
     }
-
-    table.insert(window.Tabs, tabData)
-    return tabData
+    table.insert(window.Tabs, Tab)
+    self.Tabs[name] = Tab
+    print("Aba criada:", name)
+    return Tab
 end
 
--- Botão
-function SuperLib:CreateButton(tab, name, callback)
+-- Criar botão
+function NovaZLib:CreateButton(tab, name, callback)
+    local Button = {
+        Name = name,
+        Callback = callback
+    }
+    table.insert(tab.Elements, Button)
+    print("Botão criado:", name)
+end
+
+-- Criar toggle
+function NovaZLib:CreateToggle(tab, name, default, callback)
+    local Toggle = {
+        Name = name,
+        Value = default,
+        Callback = callback
+    }
+    table.insert(tab.Elements, Toggle)
+    print("Toggle criado:", name)
+end
+
+return NovaZLibfunction SuperLib:CreateButton(tab, name, callback)
     local button = Instance.new("TextButton")
     button.Size = UDim2.new(0, 200, 0, 40)
     button.Position = UDim2.new(0, 20, 0, 20 + (#tab.Buttons * 50))
