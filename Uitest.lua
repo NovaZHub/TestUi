@@ -1,143 +1,210 @@
--- NovaZLib UI com Intro, Tabs e Minimize/Close
-local TweenService = game:GetService("TweenService")
+-- SuperLibraryMin.lua
+-- Library completa com Minimizar
 
-local NovaZLib = {}
-NovaZLib.__index = NovaZLib
+local SuperLib = {}
 
--- Criar Janela
-function NovaZLib:CreateWindow(config)
-    config = config or {}
-    local window = setmetatable({}, NovaZLib)
+-- Serviços
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
-    -- ScreenGui
-    local ScreenGui = Instance.new("ScreenGui")
-    ScreenGui.Name = "NovaZHub_UI"
-    ScreenGui.Parent = game:GetService("CoreGui")
-    ScreenGui.IgnoreGuiInset = true
-    ScreenGui.ResetOnSpawn = false
+-- Armazena todas as janelas
+SuperLib.Windows = {}
 
-    -- MainFrame
-    local MainFrame = Instance.new("Frame")
-    MainFrame.Name = "MainFrame"
-    MainFrame.Parent = ScreenGui
-    MainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-    MainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
-    MainFrame.Size = UDim2.new(0, 450, 0, 300)
-    MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-    MainFrame.BackgroundTransparency = 1
-    MainFrame.Visible = false
+-- Criar janela
+function SuperLib:CreateWindow(title)
+    local window = Instance.new("ScreenGui")
+    window.Name = title
+    window.ResetOnSpawn = false
+    window.Parent = PlayerGui
 
-    local UICorner = Instance.new("UICorner", MainFrame)
-    UICorner.CornerRadius = UDim.new(0, 8)
+    local mainFrame = Instance.new("Frame")
+    mainFrame.Size = UDim2.new(0, 500, 0, 400)
+    mainFrame.Position = UDim2.new(0.5, -250, 0.5, -200)
+    mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    mainFrame.BorderSizePixel = 0
+    mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+    mainFrame.Parent = window
 
-    -- Topbar
-    local Topbar = Instance.new("Frame")
-    Topbar.Name = "Topbar"
-    Topbar.Parent = MainFrame
-    Topbar.Size = UDim2.new(1, 0, 0, 35)
-    Topbar.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    -- Título
+    local titleLabel = Instance.new("TextLabel")
+    titleLabel.Size = UDim2.new(1, 0, 0, 50)
+    titleLabel.Position = UDim2.new(0, 0, 0, 0)
+    titleLabel.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    titleLabel.Text = title
+    titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    titleLabel.Font = Enum.Font.GothamBold
+    titleLabel.TextSize = 24
+    titleLabel.Parent = mainFrame
 
-    local TopCorner = Instance.new("UICorner", Topbar)
-    TopCorner.CornerRadius = UDim.new(0, 8)
-
-    local Title = Instance.new("TextLabel")
-    Title.Parent = Topbar
-    Title.Size = UDim2.new(1, -70, 1, 0)
-    Title.Position = UDim2.new(0, 10, 0, 0)
-    Title.Text = config.Title or "NovaZHub"
-    Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-    Title.Font = Enum.Font.GothamBold
-    Title.TextXAlignment = Enum.TextXAlignment.Left
-    Title.BackgroundTransparency = 1
-    Title.TextSize = 16
-
-    -- Fechar
-    local CloseButton = Instance.new("TextButton")
-    CloseButton.Parent = Topbar
-    CloseButton.Size = UDim2.new(0, 30, 0, 30)
-    CloseButton.Position = UDim2.new(1, -35, 0, 3)
-    CloseButton.Text = "X"
-    CloseButton.TextSize = 16
-    CloseButton.Font = Enum.Font.GothamBold
-    CloseButton.BackgroundColor3 = Color3.fromRGB(200, 60, 60)
-    CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-
-    local CloseCorner = Instance.new("UICorner", CloseButton)
-    CloseCorner.CornerRadius = UDim.new(0, 6)
-
-    CloseButton.MouseButton1Click:Connect(function()
-        ScreenGui:Destroy()
-    end)
-
-    -- Botão minimizar
-    local MinimizeButton = Instance.new("TextButton")
-    MinimizeButton.Parent = Topbar
-    MinimizeButton.Size = UDim2.new(0, 30, 0, 30)
-    MinimizeButton.Position = UDim2.new(1, -70, 0, 3)
-    MinimizeButton.Text = "-"
-    MinimizeButton.TextSize = 20
-    MinimizeButton.Font = Enum.Font.GothamBold
-    MinimizeButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-    MinimizeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-
-    local MiniCorner = Instance.new("UICorner", MinimizeButton)
-    MiniCorner.CornerRadius = UDim.new(0, 6)
+    -- Botão Minimizar
+    local minimizeButton = Instance.new("TextButton")
+    minimizeButton.Size = UDim2.new(0, 30, 0, 30)
+    minimizeButton.Position = UDim2.new(1, -35, 0, 10)
+    minimizeButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+    minimizeButton.Text = "_"
+    minimizeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    minimizeButton.Font = Enum.Font.GothamBold
+    minimizeButton.TextSize = 24
+    minimizeButton.Parent = mainFrame
 
     local minimized = false
-    local fullSize = MainFrame.Size
-    local minSize = UDim2.new(0, 450, 0, 35)
+    local originalSize = mainFrame.Size
+    local originalPos = mainFrame.Position
 
-    MinimizeButton.MouseButton1Click:Connect(function()
-        if minimized then
-            TweenService:Create(MainFrame, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                Size = fullSize,
-                Position = UDim2.new(0.5, 0, 0.5, 0),
-                BackgroundTransparency = 0
-            }):Play()
+    minimizeButton.MouseButton1Click:Connect(function()
+        if not minimized then
+            mainFrame:TweenSize(UDim2.new(0, 200, 0, 50), "Out", "Quad", 0.3, true)
+            mainFrame:TweenPosition(UDim2.new(0.5, -100, 0.5, -25), "Out", "Quad", 0.3, true)
+            minimized = true
         else
-            TweenService:Create(MainFrame, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                Size = minSize,
-                Position = UDim2.new(0.5, 0, 0.5, -120),
-                BackgroundTransparency = 0.4
-            }):Play()
+            mainFrame:TweenSize(originalSize, "Out", "Quad", 0.3, true)
+            mainFrame:TweenPosition(originalPos, "Out", "Quad", 0.3, true)
+            minimized = false
         end
-        minimized = not minimized
     end)
 
-    -- Conteúdo (Tabs)
-    local TabHolder = Instance.new("Frame", MainFrame)
-    TabHolder.Size = UDim2.new(1, -10, 1, -45)
-    TabHolder.Position = UDim2.new(0, 5, 0, 40)
-    TabHolder.BackgroundTransparency = 1
+    -- Container de abas
+    local tabContainer = Instance.new("Frame")
+    tabContainer.Size = UDim2.new(1, 0, 1, -50)
+    tabContainer.Position = UDim2.new(0, 0, 0, 50)
+    tabContainer.BackgroundTransparency = 1
+    tabContainer.Parent = mainFrame
 
-    window.ScreenGui = ScreenGui
-    window.MainFrame = MainFrame
-    window.TabHolder = TabHolder
+    local windowData = {
+        Gui = window,
+        Frame = mainFrame,
+        Tabs = {},
+        TabContainer = tabContainer
+    }
 
-    -- Intro animada
-    MainFrame.Visible = true
-    TweenService:Create(MainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-        BackgroundTransparency = 0
-    }):Play()
-
-    return window
+    table.insert(SuperLib.Windows, windowData)
+    return windowData
 end
 
--- Criar Tabs
-function NovaZLib:CreateTab(name)
-    local TabFrame = Instance.new("Frame", self.TabHolder)
-    TabFrame.Size = UDim2.new(1, 0, 1, 0)
-    TabFrame.BackgroundTransparency = 1
+-- Criar aba
+function SuperLib:CreateTab(window, name)
+    local tabFrame = Instance.new("Frame")
+    tabFrame.Size = UDim2.new(1, 0, 1, 0)
+    tabFrame.Position = UDim2.new(0, 0, 0, 0)
+    tabFrame.BackgroundTransparency = 1
+    tabFrame.Visible = true
+    tabFrame.Parent = window.TabContainer
 
-    local Label = Instance.new("TextLabel", TabFrame)
-    Label.Text = name
-    Label.Size = UDim2.new(1, 0, 0, 30)
-    Label.BackgroundTransparency = 1
-    Label.Font = Enum.Font.GothamBold
-    Label.TextColor3 = Color3.fromRGB(255, 255, 255)
-    Label.TextSize = 16
+    local tabData = {
+        Name = name,
+        Frame = tabFrame,
+        Buttons = {},
+        Toggles = {},
+        Sliders = {}
+    }
 
-    return TabFrame
+    table.insert(window.Tabs, tabData)
+    return tabData
 end
 
-return NovaZLib
+-- Botão
+function SuperLib:CreateButton(tab, name, callback)
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.new(0, 200, 0, 40)
+    button.Position = UDim2.new(0, 20, 0, 20 + (#tab.Buttons * 50))
+    button.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+    button.Text = name
+    button.TextColor3 = Color3.fromRGB(255, 255, 255)
+    button.Font = Enum.Font.GothamBold
+    button.TextSize = 20
+    button.Parent = tab.Frame
+
+    button.MouseButton1Click:Connect(function()
+        callback()
+    end)
+
+    table.insert(tab.Buttons, button)
+    return button
+end
+
+-- Toggle
+function SuperLib:CreateToggle(tab, name, default, callback)
+    local toggle = Instance.new("TextButton")
+    toggle.Size = UDim2.new(0, 200, 0, 40)
+    toggle.Position = UDim2.new(0, 20, 0, 20 + (#tab.Toggles * 50))
+    toggle.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+    toggle.Text = name .. ": " .. (default and "ON" or "OFF")
+    toggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+    toggle.Font = Enum.Font.GothamBold
+    toggle.TextSize = 20
+    toggle.Parent = tab.Frame
+
+    local state = default
+
+    toggle.MouseButton1Click:Connect(function()
+        state = not state
+        toggle.Text = name .. ": " .. (state and "ON" or "OFF")
+        callback(state)
+    end)
+
+    table.insert(tab.Toggles, toggle)
+    return toggle
+end
+
+-- Slider
+function SuperLib:CreateSlider(tab, name, min, max, default, callback)
+    local sliderFrame = Instance.new("Frame")
+    sliderFrame.Size = UDim2.new(0, 200, 0, 40)
+    sliderFrame.Position = UDim2.new(0, 20, 0, 20 + (#tab.Sliders * 50))
+    sliderFrame.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+    sliderFrame.Parent = tab.Frame
+
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1, 0, 0.5, 0)
+    label.Position = UDim2.new(0, 0, 0, 0)
+    label.BackgroundTransparency = 1
+    label.Text = name .. ": " .. default
+    label.TextColor3 = Color3.fromRGB(255, 255, 255)
+    label.Font = Enum.Font.GothamBold
+    label.TextSize = 18
+    label.Parent = sliderFrame
+
+    local sliderBar = Instance.new("Frame")
+    sliderBar.Size = UDim2.new(1, 0, 0.5, 0)
+    sliderBar.Position = UDim2.new(0, 0, 0.5, 0)
+    sliderBar.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    sliderBar.Parent = sliderFrame
+
+    local sliderFill = Instance.new("Frame")
+    sliderFill.Size = UDim2.new((default - min) / (max - min), 0, 1, 0)
+    sliderFill.Position = UDim2.new(0, 0, 0, 0)
+    sliderFill.BackgroundColor3 = Color3.fromRGB(150, 150, 150)
+    sliderFill.Parent = sliderBar
+
+    local dragging = false
+
+    sliderBar.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+        end
+    end)
+
+    sliderBar.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = false
+        end
+    end)
+
+    RunService.RenderStepped:Connect(function()
+        if dragging then
+            local mouse = game.Players.LocalPlayer:GetMouse()
+            local relativeX = math.clamp(mouse.X - sliderBar.AbsolutePosition.X, 0, sliderBar.AbsoluteSize.X)
+            local value = min + (relativeX / sliderBar.AbsoluteSize.X) * (max - min)
+            sliderFill.Size = UDim2.new(relativeX / sliderBar.AbsoluteSize.X, 0, 1, 0)
+            label.Text = name .. ": " .. math.floor(value)
+            callback(value)
+        end
+    end)
+
+    table.insert(tab.Sliders, sliderFrame)
+    return sliderFrame
+end
+
+return SuperLib
